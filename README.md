@@ -157,7 +157,7 @@ vlsi-llm-rag/
 
 The application will be accessible at `http://localhost:3000`.
 
-![VLSI RAG Design Flow Diagram](assets/Automated  front end  VLSI  design AI tool using LLM RAG.png)
+![VLSI RAG Design Flow Diagram](https://github.com/Yarok14Technologies/front-end-ASIC-design-LMM-tool-using-RAG/blob/main/assets/Automated%20%20front%20end%20%20VLSI%20%20design%20AI%20tool%20using%20LLM%20RAG.png)
 
 ## 📁 Repository Structure
 
