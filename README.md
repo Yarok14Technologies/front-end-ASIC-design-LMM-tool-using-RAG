@@ -68,9 +68,69 @@ The system operates in a continuous, iterative loop to ensure functional correct
 
 The project is a full-stack application with a Python/FastAPI backend, a dedicated RAG knowledge base, and a React/Vite frontend.
 
-front-end-ASIC-design-LMM-tool-using-RAG/ ├── README.md # This file ├── requirements.txt
-
-├── .env.example # Template for environment variables ├── docker-compose.yml # Containerized setup for the stack | ├── backend/ # FastAPI backend API (LLM and Verification orchestration) │ └── app/ │ ├── services/ # Core business logic │ │ ├── rag_service.py # Vector DB/Retrieval interface │ │ ├── llm_service.py # LLM communication wrapper │ │ ├── rtl_generator.py # Main generation and correction logic │ │ └── vip_generator.py # Verification IP generation │ └── utils/ │ ├── file_parser.py # NLP-based specification extraction │ └── prompts.py # LLM prompt templates | ├── knowledge_base/ # External information for RAG │ ├── specs/ # Reference design specifications │ ├── protocols/ # Protocol documents (e.g., AXI, I2C, UART) │ └── vector_db/ # Stored vector embeddings (ignored via .gitignore) | └── frontend/ # React/Vite web interface └── src/ └── pages/ # Main application views (Upload, Generate, Outputs) | └── examples/ # Reference examples ├── axi4_lite/ # Example files for AXI4-Lite generation └── uart/ # Example files for UART generation
+front-end-ASIC-design-LMM-tool-using-RAG/
+vlsi-llm-rag/
+├── README.md
+├── requirements.txt
+├── .env.example
+├── docker-compose.yml
+|
+├── backend/
+│   ├── main.py
+│   ├── config.py
+│   ├── requirements.txt
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── routes.py
+│   │   │   └── models.py
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   └── config.py
+│   │   ├── services/  (Core LLM/RAG/VLSI Logic)
+│   │   │   ├── __init__.py
+│   │   │   ├── rag_service.py
+│   │   │   ├── llm_service.py
+│   │   │   ├── rtl_generator.py
+│   │   │   ├── vip_generator.py
+│   │   │   └── file_service.py
+│   │   └── utils/
+│   │       ├── __init__.py
+│   │       ├── file_parser.py
+│   │       └── prompts.py
+|
+├── knowledge_base/  (Retrieval-Augmented Data)
+│   ├── specs/
+│   ├── protocols/
+│   └── vector_db/
+|
+├── frontend/ (React/Vite Application)
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── index.html
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── App.css
+│       ├── components/ (Reusable UI)
+│       │   ├── FileUpload.jsx
+│       │   ├── CodeViewer.jsx
+│       │   ├── StatusPanel.jsx
+│       │   └── RequirementsForm.jsx
+│       └── pages/ (Main Views)
+│           ├── Home.jsx
+│           ├── Upload.jsx
+│           ├── Generate.jsx
+│           └── Outputs.jsx
+|
+└── examples/
+    ├── axi4_lite/
+    │   ├── spec.txt
+    │   └── requirements.md
+    └── uart/
+        ├── spec.txt
+        └── requirements.md
 
 ***
 
