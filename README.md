@@ -159,6 +159,12 @@ The application will be accessible at `http://localhost:3000`.
 
 ![VLSI RAG Design Flow Diagram](https://github.com/Yarok14Technologies/front-end-ASIC-design-LMM-tool-using-RAG/blob/main/assets/Automated%20%20front%20end%20%20VLSI%20%20design%20AI%20tool%20using%20LLM%20RAG.png)
 
+![VLSI RAG Design Flow Diagram](https://github.com/Yarok14Technologies/front-end-ASIC-design-LMM-tool-using-RAG/blob/main/assets/4%20pages%20model.png)
+
+![VLSI RAG Design Flow Diagram](https://github.com/Yarok14Technologies/front-end-ASIC-design-LMM-tool-using-RAG/blob/main/assets/UI%20UX%20Home%20Page.png)
+
+![VLSI RAG Design Flow Diagram](https://github.com/Yarok14Technologies/front-end-ASIC-design-LMM-tool-using-RAG/blob/main/assets/frontend%20structure%20repo%20structure.png)
+
 ## 📁 Repository Structure
 
 The project is a full-stack application with a Python/FastAPI backend, a dedicated RAG knowledge base, and a React/Vite frontend.
