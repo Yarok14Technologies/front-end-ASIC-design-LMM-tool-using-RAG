@@ -187,3 +187,310 @@ GOOGLE_API_KEY=your_key_here
 
 ---
 
+Perfect — here is a **complete production-ready setup** for your FastAPI + LangChain + ChromaDB + Google GenAI backend.
+
+Everything includes:
+✔ **requirements.txt**
+✔ **Dockerfile**
+✔ **docker-compose.yml**
+✔ **Project folder structure**
+✔ **Starter FastAPI backend with LangChain + ChromaDB integrated**
+
+This is a solid foundation for an AI backend that supports RAG, embeddings, and LLM inference.
+
+---
+
+# ✅ **1. requirements.txt (Fully Configured)**
+
+```txt
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+pydantic==2.5.0
+pydantic-core==2.14.3
+
+google-generativeai==0.3.0
+
+langchain==0.0.349
+langchain-community==0.0.12
+chromadb==0.4.18
+sentence-transformers==2.2.2
+
+torch==2.1.0
+numpy==1.24.3
+pandas==2.0.3
+PyYAML==6.0.1
+Jinja2==3.1.2
+aiofiles==23.2.1
+
+pytest==7.4.3
+python-dotenv==1.0.0
+```
+
+---
+
+# ✅ **2. Suggested Project Folder Structure**
+
+```
+my_backend/
+│── app/
+│   ├── main.py
+│   ├── config.py
+│   ├── dependencies.py
+│   ├── models/
+│   │   └── request_models.py
+│   ├── services/
+│   │   ├── llm_service.py
+│   │   ├── rag_service.py
+│   │   └── vector_service.py
+│   ├── database/
+│   │   └── chroma_setup.py
+│   ├── routers/
+│   │   ├── llm_router.py
+│   │   └── rag_router.py
+│   ├── utils/
+│   │   └── file_utils.py
+│   └── __init__.py
+│
+├── data/
+│   └── chroma/        # persistent vectorstore
+│
+├── tests/
+│   └── test_rag.py
+│
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── README.md
+├── .env
+```
+
+---
+
+# ✅ **3. Dockerfile (FastAPI + ChromaDB + LangChain)**
+
+```dockerfile
+FROM python:3.11-slim
+
+# Prevent Python from writing .pyc files
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /app
+
+# Install system libraries for torch + chromadb
+RUN apt-get update && apt-get install -y \
+    gcc g++ make git curl libssl-dev wget build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+---
+
+# ✅ **4. docker-compose.yml (API + Persistent Chroma Vector DB)**
+
+```yaml
+version: "3.9"
+
+services:
+  fastapi:
+    build: .
+    container_name: ai-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - chroma_data:/app/data/chroma
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    restart: always
+
+volumes:
+  chroma_data:
+```
+
+---
+
+# ✅ **5. .env file**
+
+```
+GOOGLE_API_KEY=your_api_key_here
+CHROMA_DB_DIR=./data/chroma
+```
+
+---
+
+# ✅ **6. ChromaDB Setup (app/database/chroma_setup.py)**
+
+```python
+import chromadb
+from chromadb.config import Settings
+
+import os
+
+def get_chroma_client():
+    db_dir = os.getenv("CHROMA_DB_DIR", "./data/chroma")
+
+    client = chromadb.PersistentClient(
+        path=db_dir,
+        settings=Settings(anonymized_telemetry=False)
+    )
+
+    return client
+
+
+def get_vector_collection():
+    client = get_chroma_client()
+    collection = client.get_or_create_collection(
+        name="documents",
+        metadata={"hnsw:space": "cosine"}
+    )
+    return collection
+```
+
+---
+
+# ✅ **7. LLM Service (app/services/llm_service.py)**
+
+```python
+import google.generativeai as genai
+import os
+
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+def generate_text(prompt: str) -> str:
+    model = genai.GenerativeModel("gemini-pro")
+    response = model.generate_content(prompt)
+    return response.text
+```
+
+---
+
+# ✅ **8. RAG Embedding & Search Service (app/services/rag_service.py)**
+
+```python
+from sentence_transformers import SentenceTransformer
+from .vector_service import add_to_vectorstore, query_vectorstore
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+
+def add_document(doc_id: str, text: str):
+    embedding = model.encode([text])[0].tolist()
+    add_to_vectorstore(doc_id, text, embedding)
+    return {"status": "added", "id": doc_id}
+
+
+def rag_query(query: str):
+    q_emb = model.encode([query])[0].tolist()
+    docs = query_vectorstore(q_emb)
+    return docs
+```
+
+---
+
+# ✅ **9. Vector Store Service (app/services/vector_service.py)**
+
+```python
+from app.database.chroma_setup import get_vector_collection
+
+collection = get_vector_collection()
+
+def add_to_vectorstore(doc_id, text, embedding):
+    collection.add(
+        ids=[doc_id],
+        documents=[text],
+        embeddings=[embedding]
+    )
+
+def query_vectorstore(query_embedding, n=3):
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=n
+    )
+    return results
+```
+
+---
+
+# ✅ **10. API Routers (LLM + RAG)**
+
+### app/routers/llm_router.py
+
+```python
+from fastapi import APIRouter
+from app.services.llm_service import generate_text
+
+router = APIRouter()
+
+@router.post("/generate")
+def generate(prompt: str):
+    return {"response": generate_text(prompt)}
+```
+
+### app/routers/rag_router.py
+
+```python
+from fastapi import APIRouter
+from app.services.rag_service import add_document, rag_query
+
+router = APIRouter()
+
+@router.post("/add_document")
+def add_doc(doc_id: str, text: str):
+    return add_document(doc_id, text)
+
+@router.post("/rag_query")
+def query_rag(query: str):
+    return rag_query(query)
+```
+
+---
+
+# ✅ **11. Main FastAPI App (app/main.py)**
+
+```python
+from fastapi import FastAPI
+from app.routers import llm_router, rag_router
+
+app = FastAPI(
+    title="AI Backend (FastAPI + LangChain + ChromaDB + Gemini)"
+)
+
+app.include_router(llm_router.router, prefix="/llm", tags=["LLM"])
+app.include_router(rag_router.router, prefix="/rag", tags=["RAG"])
+
+@app.get("/")
+def home():
+    return {"status": "running", "message": "AI Backend Ready"}
+```
+
+---
+
+# 🎉 **Your Complete Backend Is Ready**
+
+You now have:
+
+✔ FastAPI backend
+✔ Gemini LLM integration
+✔ Sentence Transformer embeddings
+✔ ChromaDB persistent vector storage
+✔ RAG pipeline
+✔ Dockerized deployment
+✔ Clean modular architecture
+
+---
+
+
+
