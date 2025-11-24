@@ -1,0 +1,29 @@
+AXI4-Lite Interface Controller
+
+Interface Requirements:
+- AXI4-Lite slave interface
+- 32-bit data bus
+- 32-bit address bus
+- Support for read and write transactions
+- Single clock domain
+- Active-low reset
+
+Register Map:
+Address 0x00: Control Register
+  Bit 0: Enable (RW)
+  Bit 1: Interrupt Enable (RW)
+  Bit 2: Status (RO)
+
+Address 0x04: Data Register (RW)
+Address 0x08: Configuration Register (RW)
+
+Functional Requirements:
+- Decode AXI4-Lite transactions
+- Handle read and write operations
+- Generate interrupt based on configuration
+- Support for 4x 32-bit registers
+- Error handling for invalid addresses
+
+Performance:
+- Target frequency: 100MHz
+- Low latency operation
