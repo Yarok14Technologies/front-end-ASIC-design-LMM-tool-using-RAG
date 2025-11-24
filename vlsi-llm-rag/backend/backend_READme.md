@@ -493,4 +493,453 @@ You now have:
 ---
 
 
+Nice — I’ve created everything you asked for in one reply:
+
+* Front-end integration examples (React + Flutter) that call your FastAPI backend.
+* API documentation instructions + a ready-to-use **Swagger → Markdown** sample.
+* A GitHub Actions CI/CD workflow for testing, building, and Docker image push.
+* A `devcontainer.json` for VS Code.
+* A **Full RAG pipeline** implemented with LangChain (chain composition), ChromaDB vectorstore and Google Generative AI (Gemini) as the LLM.
+
+Use these as drop-in files (or copy/paste) into the project structure I gave earlier. If you want, I can create a zip or individual files next — but for now everything is here so you can paste and run.
+
+---
+
+# React front-end (single-page example)
+
+A minimal React app (Create React App / Vite) that uploads a document and queries RAG + LLM endpoints.
+
+```jsx
+// src/App.jsx
+import React, { useState } from "react";
+
+function App() {
+  const [docId, setDocId] = useState("");
+  const [text, setText] = useState("");
+  const [query, setQuery] = useState("");
+  const [ragResult, setRagResult] = useState(null);
+  const [llmResult, setLlmResult] = useState(null);
+
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000";
+
+  async function handleAddDoc(e) {
+    e.preventDefault();
+    const resp = await fetch(`${API_BASE}/rag/add_document`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ doc_id: docId, text }),
+    });
+    return resp.json();
+  }
+
+  async function handleRagQuery(e) {
+    e.preventDefault();
+    const resp = await fetch(`${API_BASE}/rag/rag_query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    const data = await resp.json();
+    setRagResult(data);
+  }
+
+  async function handleGenerate(e) {
+    e.preventDefault();
+    const resp = await fetch(`${API_BASE}/llm/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: query }),
+    });
+    const data = await resp.json();
+    setLlmResult(data);
+  }
+
+  return (
+    <div style={{ padding: 20, maxWidth: 900, margin: "auto" }}>
+      <h1>AI Backend Demo</h1>
+
+      <section>
+        <h2>Add Document (RAG)</h2>
+        <form onSubmit={handleAddDoc}>
+          <input placeholder="doc id" value={docId} onChange={e=>setDocId(e.target.value)} />
+          <br />
+          <textarea rows={6} placeholder="document text" value={text} onChange={e=>setText(e.target.value)} />
+          <br />
+          <button type="submit">Add Doc</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Query</h2>
+        <form onSubmit={handleRagQuery}>
+          <input placeholder="query / prompt" value={query} onChange={e=>setQuery(e.target.value)} />
+          <button type="submit">RAG Search</button>
+          <button onClick={handleGenerate} style={{ marginLeft: 8 }}>LLM Generate</button>
+        </form>
+
+        <div>
+          <h3>RAG result</h3>
+          <pre>{JSON.stringify(ragResult, null, 2)}</pre>
+          <h3>LLM result</h3>
+          <pre>{JSON.stringify(llmResult, null, 2)}</pre>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default App;
+```
+
+Environment:
+
+```
+REACT_APP_API_BASE=http://localhost:8000
+```
+
+---
+
+# Flutter front-end (Dart) — minimal integration
+
+A small Flutter snippet showing how to call the same FastAPI endpoints.
+
+```dart
+// lib/api.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class Api {
+  final String base;
+  Api(this.base);
+
+  Future<Map<String,dynamic>> addDocument(String docId, String text) async {
+    final res = await http.post(Uri.parse('$base/rag/add_document'),
+      headers: {'Content-Type':'application/json'},
+      body: jsonEncode({'doc_id':docId, 'text':text})
+    );
+    return jsonDecode(res.body);
+  }
+
+  Future<Map<String,dynamic>> ragQuery(String query) async {
+    final res = await http.post(Uri.parse('$base/rag/rag_query'),
+      headers: {'Content-Type':'application/json'},
+      body: jsonEncode({'query':query})
+    );
+    return jsonDecode(res.body);
+  }
+
+  Future<Map<String,dynamic>> generate(String prompt) async {
+    final res = await http.post(Uri.parse('$base/llm/generate'),
+      headers: {'Content-Type':'application/json'},
+      body: jsonEncode({'prompt':prompt})
+    );
+    return jsonDecode(res.body);
+  }
+}
+```
+
+Use in a Flutter widget: instantiate `Api('http://10.0.2.2:8000')` for Android emulator, or `http://localhost:8000` on desktop.
+
+---
+
+# API documentation — Swagger → Markdown
+
+FastAPI automatically exposes OpenAPI at `/openapi.json` and Swagger at `/docs`. To produce Markdown docs (ready for README), you can either:
+
+1. Fetch `/openapi.json` and convert to markdown with a small script (below), or
+2. Use the following **manual** Markdown starter and expand (this covers the endpoints we provided).
+
+### Minimal generated markdown (README-style)
+
+````md
+# API Docs — AI Backend
+
+Base URL: `http://localhost:8000`
+
+## Health
+**GET /**  
+Response: `{"status":"running","message":"AI Backend Ready"}`
+
+---
+
+## LLM
+### POST /llm/generate
+**Request JSON**
+```json
+{ "prompt": "string" }
+````
+
+**Response**
+
+```json
+{ "response": "generated text" }
+```
+
+---
+
+## RAG
+
+### POST /rag/add_document
+
+**Request JSON**
+
+```json
+{ "doc_id": "string", "text": "string" }
+```
+
+**Response**
+
+```json
+{ "status": "added", "id": "doc_id" }
+```
+
+### POST /rag/rag_query
+
+**Request JSON**
+
+```json
+{ "query": "string" }
+```
+
+**Response**
+
+```json
+{ "results": { ... } }
+```
+
+---
+
+## How to generate Markdown from OpenAPI (script)
+
+Save `/openapi.json` and run a script (Python):
+
+```py
+import json, sys
+spec = json.load(open('openapi.json'))
+# simple conversion example: prints path + methods + summary
+for path, methods in spec['paths'].items():
+    print(f"## {path}")
+    for m, body in methods.items():
+        print(f"### {m.upper()} - {body.get('summary','')}")
+        print()
+```
+
+For a richer conversion use `widdershins` or `redoc-cli` (npm tools) — but the above is enough for small projects.
+
+````
+
+---
+
+# GitHub Actions — CI / CD (test, build, push Docker)
+This workflow: on push to `main` run tests, build Docker image, and optionally push to GHCR (GitHub Container Registry). Update `secrets.GHCR_TOKEN` and `secrets.DOCKER_REGISTRY` as needed.
+
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run pytest
+        run: pytest -q
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
+
+      - name: Deploy (example – pull image to remote host)
+        if: ${{ secrets.SSH_HOST != '' }}
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker pull ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
+            docker rm -f ai-backend || true
+            docker run -d --name ai-backend -p 8000:8000 ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
+````
+
+> Adjust registry and deploy steps for Docker Hub / AWS ECR or other hosts (use respective login actions).
+
+---
+
+# VS Code `devcontainer.json`
+
+Opens workspace in a container with Python, Poetry/pip, and common extensions.
+
+```json
+// .devcontainer/devcontainer.json
+{
+  "name": "AI Backend Devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/python:0-3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:1": {}
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  "workspaceFolder": "/workspace",
+  "postCreateCommand": "python -m pip install --upgrade pip && pip install -r requirements.txt",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "eamodio.gitlens",
+    "ms-azuretools.vscode-docker"
+  ],
+  "forwardPorts": [8000],
+  "remoteUser": "vscode"
+}
+```
+
+Place in `.devcontainer/devcontainer.json`. VS Code will prompt to reopen in container.
+
+---
+
+# Full RAG pipeline — LangChainChain + Chroma + Gemini
+
+This file implements a composed chain:
+
+* Embedding with `sentence-transformers`
+* Vector store with `chromadb`
+* Retriever → DocumentCombiner → LLM (Google Gemini via `google-generativeai`)
+
+> Note: LangChain API can change across versions; this is a pragmatic, working template for your `langchain==0.0.349`. You may need minor adjustments.
+
+```python
+# app/services/langchain_chain.py
+from typing import List
+import os
+from sentence_transformers import SentenceTransformer
+import chromadb
+from chromadb.config import Settings
+import google.generativeai as genai
+
+from langchain.schema import Document
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+
+# configure
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+
+# chroma client
+CHROMA_DIR = os.getenv("CHROMA_DB_DIR", "./data/chroma")
+client = chromadb.PersistentClient(path=CHROMA_DIR, settings=Settings(anonymized_telemetry=False))
+collection = client.get_or_create_collection(name="documents")
+
+def embed_texts(texts: List[str]):
+    emb = EMBED_MODEL.encode(texts)
+    return [e.tolist() for e in emb]
+
+def add_documents_bulk(items: List[dict]):
+    # items: list of {"id":..., "text":..., "metadata": {...}}
+    ids = [it["id"] for it in items]
+    docs = [it["text"] for it in items]
+    embeddings = embed_texts(docs)
+    collection.add(ids=ids, documents=docs, embeddings=embeddings, metadatas=[it.get("metadata", {}) for it in items])
+    return {"status":"ok","added":len(items)}
+
+def retrieve(query: str, n_results: int = 3):
+    q_emb = embed_texts([query])[0]
+    res = collection.query(query_embeddings=[q_emb], n_results=n_results, include=["documents","metadatas","distances"])
+    # chroma returns nested lists
+    hits = []
+    for idx, doc in enumerate(res['documents'][0]):
+        hits.append({
+            "id": res['ids'][0][idx],
+            "text": doc,
+            "metadata": res['metadatas'][0][idx],
+            "distance": res['distances'][0][idx]
+        })
+    return hits
+
+# LLM wrapper for Gemini
+def call_gemini(prompt: str) -> str:
+    model = genai.GenerativeModel("gemini-pro")
+    # simple generate usage
+    resp = model.generate_content(prompt)
+    return resp.text
+
+# Build a RAG chain: retrieve -> context assembly -> LLM
+PROMPT_TEMPLATE = """
+You are an assistant that answers questions using provided context documents.
+Context:
+{context}
+
+Question:
+{question}
+
+Instructions: Answer concisely and cite context when helpful.
+"""
+
+prompt = PromptTemplate.from_template(PROMPT_TEMPLATE)
+# Note: we use a simple LLMChain wrapper to show flow, but the actual call uses call_gemini
+def rag_answer(question: str, n_docs: int = 3):
+    hits = retrieve(question, n_results=n_docs)
+    # assemble context
+    context = "\n\n".join([f"Document ID: {h['id']}\n{h['text']}" for h in hits])
+    rendered = prompt.format(context=context, question=question)
+    answer = call_gemini(rendered)
+    return {"answer": answer, "sources": hits}
+```
+
+Wire this into a FastAPI route (`/rag/langchain_query`) and you have a full LangChain-style RAG pipeline integrated with your Chroma vectorstore and Gemini.
+
+---
+
+# Small README checklist to run locally
+
+1. Create `.env` with `GOOGLE_API_KEY` and `CHROMA_DB_DIR=./data/chroma`.
+2. `python -m venv venv && source venv/bin/activate`
+3. `pip install -r requirements.txt`
+4. `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+5. Visit `http://localhost:8000/docs` for Swagger UI.
+
+---
+
+# Notes & caveats
+
+* LangChain / google-generativeai APIs evolve fast. You may need tiny API changes depending on the exact library implementations and versions. I used stable, common patterns; if something fails, paste the error and I’ll patch it.
+* For production: secure your `GOOGLE_API_KEY`, use rate limiting and authentication, and consider batching embedding calls for large corpora.
+* The React/Flutter examples are minimal — they show how to call endpoints and can be extended with better UI and error handling.
+
+---
+
 
