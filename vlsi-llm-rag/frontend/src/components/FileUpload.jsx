@@ -1,69 +1,70 @@
-import React, { useCallback, useState } from 'react'
-import { Upload } from 'lucide-react'
+// src/components/FileUpload.jsx
+import React, { useState } from 'react';
 
-const FileUpload = ({ onFileUpload, acceptedTypes = '.txt,.md,.yaml,.yml,.json' }) => {
-  const [isDragging, setIsDragging] = useState(false)
+function FileUpload() {
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploadStatus, setUploadStatus] = useState('');
 
-  const handleDrag = useCallback((e) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }, [])
+  const handleFileChange = (event) => {
+    // Convert FileList object to an array for easy mapping
+    setSelectedFiles(Array.from(event.target.files));
+    setUploadStatus('');
+  };
 
-  const handleDragIn = useCallback((e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }, [])
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+      alert('Please select files to upload.');
+      return;
+    }
 
-  const handleDragOut = useCallback((e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }, [])
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
+    setUploadStatus('Uploading...');
     
-    const files = e.dataTransfer.files
-    if (files && files.length > 0) {
-      onFileUpload(files[0])
+    // **NOTE:** In a real application, you would use FormData 
+    // and an API call (e.g., Axios or fetch) here.
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      console.log('Files submitted:', selectedFiles.map(f => f.name));
+      setUploadStatus(`Successfully uploaded ${selectedFiles.length} files.`);
+      // Optionally clear files: setSelectedFiles([]);
+    } catch (error) {
+      setUploadStatus(`Upload failed: ${error.message}`);
     }
-  }, [onFileUpload])
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      onFileUpload(file)
-    }
-  }
+  };
 
   return (
-    <div
-      className={`file-upload ${isDragging ? 'dragover' : ''}`}
-      onDragEnter={handleDragIn}
-      onDragLeave={handleDragOut}
-      onDragOver={handleDrag}
-      onDrop={handleDrop}
-      onClick={() => document.getElementById('file-input').click()}
-    >
-      <input
-        id="file-input"
-        type="file"
-        accept={acceptedTypes}
-        onChange={handleFileSelect}
-        style={{ display: 'none' }}
+    <div className="file-upload-container">
+      <h3>Select Design and Verification Files</h3>
+      <input 
+        type="file" 
+        multiple 
+        onChange={handleFileChange} 
+        accept=".v,.sv,.vhd,.vhdl,.sva" // Common EDA file extensions
+        style={{ marginBottom: '10px' }}
       />
       
-      <Upload size={48} color="#64748b" />
-      <h3>Upload Specification File</h3>
-      <p>Drag & drop or click to upload</p>
-      <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-        Supported: {acceptedTypes}
-      </p>
+      {selectedFiles.length > 0 && (
+        <div style={{ margin: '15px 0' }}>
+          <h4>Files Selected:</h4>
+          <ul>
+            {selectedFiles.map((file, index) => (
+              <li key={index}>{file.name} ({Math.round(file.size / 1024)} KB)</li>
+            ))}
+          </ul>
+          <button 
+            onClick={handleUpload} 
+            disabled={uploadStatus === 'Uploading...'}
+          >
+            {uploadStatus === 'Uploading...' ? 'Processing...' : 'Start Upload'}
+          </button>
+        </div>
+      )}
+      
+      {uploadStatus && <p style={{ marginTop: '10px' }}>**Status:** {uploadStatus}</p>}
     </div>
-  )
+  );
 }
 
-export default FileUpload
+export default FileUpload;

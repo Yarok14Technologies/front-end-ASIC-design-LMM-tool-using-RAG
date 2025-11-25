@@ -1,84 +1,67 @@
-import React from 'react'
+// src/components/RequirementsForm.jsx
+import React, { useState } from 'react';
 
-const RequirementsForm = ({ requirements, onChange }) => {
-  const updateRequirement = (key, value) => {
-    onChange({
-      ...requirements,
-      [key]: value
-    })
-  }
+function RequirementsForm({ onSubmit }) {
+  const [formData, setFormData] = useState({
+    designName: '',
+    interfaceProtocol: 'AXI',
+    verificationMethodology: 'UVM',
+    clockFrequency: '100 MHz'
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onSubmit) {
+      // Pass the collected data up to the parent (Generate.jsx)
+      onSubmit(formData);
+    }
+    console.log('Form Data Submitted:', formData);
+    alert('Verification requirements submitted! Check the generated code.');
+  };
 
   return (
-    <div className="card">
-      <h3>Design Requirements</h3>
+    <form onSubmit={handleSubmit} className="requirements-form">
+      <h3>Verification Environment Setup</h3>
       
-      <div className="grid grid-2">
-        <div className="form-group">
-          <label>Interface Type</label>
-          <select 
-            value={requirements.interface || ''}
-            onChange={(e) => updateRequirement('interface', e.target.value)}
-          >
-            <option value="">Select Interface</option>
-            <option value="AXI4">AXI4</option>
-            <option value="AXI4-Lite">AXI4-Lite</option>
-            <option value="AHB">AHB</option>
-            <option value="APB">APB</option>
-            <option value="UART">UART</option>
-            <option value="SPI">SPI</option>
-            <option value="I2C">I2C</option>
-            <option value="Custom">Custom</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Protocol</label>
-          <input
-            type="text"
-            value={requirements.protocol || ''}
-            onChange={(e) => updateRequirement('protocol', e.target.value)}
-            placeholder="e.g., AMBA AXI, UART 16550"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Performance Target</label>
-          <select 
-            value={requirements.performance || ''}
-            onChange={(e) => updateRequirement('performance', e.target.value)}
-          >
-            <option value="">Select Performance</option>
-            <option value="Low Frequency (< 100MHz)">Low Frequency</option>
-            <option value="Medium Frequency (100-500MHz)">Medium Frequency</option>
-            <option value="High Frequency (> 500MHz)">High Frequency</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Power Optimization</label>
-          <select 
-            value={requirements.power || ''}
-            onChange={(e) => updateRequirement('power', e.target.value)}
-          >
-            <option value="">Select Power Target</option>
-            <option value="Ultra Low Power">Ultra Low Power</option>
-            <option value="Low Power">Low Power</option>
-            <option value="Balanced">Balanced</option>
-            <option value="Performance Oriented">Performance Oriented</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label>Additional Requirements</label>
-        <textarea
-          value={requirements.additional || ''}
-          onChange={(e) => updateRequirement('additional', e.target.value)}
-          placeholder="Enter any specific requirements, constraints, or special features..."
+      <label>
+        Design Top Module Name:
+        <input 
+          type="text" 
+          name="designName" 
+          value={formData.designName} 
+          onChange={handleChange} 
+          required 
+          placeholder="e.g., top_module"
         />
-      </div>
-    </div>
-  )
+      </label>
+      
+      <label>
+        Interface Protocol:
+        <select name="interfaceProtocol" value={formData.interfaceProtocol} onChange={handleChange}>
+          <option value="AXI">AXI</option>
+          <option value="APB">APB</option>
+          <option value="Wishbone">Wishbone</option>
+          <option value="Custom">Custom/None</option>
+        </select>
+      </label>
+      
+      <label>
+        Verification Methodology:
+        <select name="verificationMethodology" value={formData.verificationMethodology} onChange={handleChange}>
+          <option value="UVM">UVM (Universal Verification Methodology)</option>
+          <option value="SV-TB">SystemVerilog Testbench</option>
+          <option value="VHDL">VHDL Testbench</option>
+        </select>
+      </label>
+      
+      <button type="submit">Generate Environment Code</button>
+    </form>
+  );
 }
 
-export default RequirementsForm
+export default RequirementsForm;

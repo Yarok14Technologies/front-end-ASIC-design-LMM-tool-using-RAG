@@ -1,48 +1,38 @@
-import React from 'react'
-import { Copy, Check } from 'lucide-react'
+// src/components/CodeViewer.jsx
+import React from 'react';
 
-const CodeViewer = ({ code, language = 'verilog', title = 'Code' }) => {
-  const [copied, setCopied] = React.useState(false)
+// Default code content if none is provided
+const DEFAULT_CODE = `
+// Example Generated SystemVerilog Code
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy text: ', err)
-    }
-  }
+import uvm_pkg::*;
+\`include "uvm_macros.svh"
+
+class my_agent extends uvm_agent;
+  // Agent implementation...
+endclass
+`;
+
+function CodeViewer({ code = DEFAULT_CODE, language = 'systemverilog', title = 'Generated Code / Output Log' }) {
+  // In a real app, you'd use a library like 'react-syntax-highlighter' 
+  // for proper code formatting and coloring.
 
   return (
-    <div className="card">
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '1rem'
-      }}>
-        <h3>{title}</h3>
-        <button 
-          onClick={copyToClipboard}
-          style={{
-            background: 'transparent',
-            border: '1px solid #475569',
-            borderRadius: '0.375rem',
-            padding: '0.5rem',
-            cursor: 'pointer',
-            color: '#cbd5e1'
-          }}
-        >
-          {copied ? <Check size={16} /> : <Copy size={16} />}
-        </button>
-      </div>
-      
-      <div className="code-viewer">
-        <pre>{code}</pre>
+    <div className="code-viewer-container">
+      <h4>{title}</h4>
+      <pre className={`code-block language-${language}`}>
+        {/* Simple plaintext rendering */}
+        <code>
+          {code}
+        </code>
+      </pre>
+      {/* Action buttons */}
+      <div className="code-actions">
+        <button onClick={() => navigator.clipboard.writeText(code)}>Copy Code</button>
+        <button>Download File</button>
       </div>
     </div>
-  )
+  );
 }
 
-export default CodeViewer
+export default CodeViewer;

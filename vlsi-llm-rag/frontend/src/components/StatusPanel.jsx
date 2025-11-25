@@ -1,37 +1,38 @@
-import React from 'react'
-import { AlertCircle, CheckCircle, Clock, Info } from 'lucide-react'
+// src/components/CodeViewer.jsx
+import React from 'react';
 
-const StatusPanel = ({ status, message, type = 'info' }) => {
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle size={20} color="#10b981" />
-      case 'error':
-        return <AlertCircle size={20} color="#ef4444" />
-      case 'warning':
-        return <AlertCircle size={20} color="#f59e0b" />
-      case 'loading':
-        return <Clock size={20} color="#3b82f6" />
-      default:
-        return <Info size={20} color="#3b82f6" />
-    }
-  }
+// Default code content if none is provided
+const DEFAULT_CODE = `
+// Example Generated SystemVerilog Code
+
+import uvm_pkg::*;
+\`include "uvm_macros.svh"
+
+class my_agent extends uvm_agent;
+  // Agent implementation...
+endclass
+`;
+
+function CodeViewer({ code = DEFAULT_CODE, language = 'systemverilog', title = 'Generated Code / Output Log' }) {
+  // In a real app, you'd use a library like 'react-syntax-highlighter' 
+  // for proper code formatting and coloring.
 
   return (
-    <div className={`status-panel status-${type}`}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-        {getIcon()}
-        <div>
-          <strong style={{ display: 'block', marginBottom: '0.25rem' }}>
-            {status}
-          </strong>
-          <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>
-            {message}
-          </div>
-        </div>
+    <div className="code-viewer-container">
+      <h4>{title}</h4>
+      <pre className={`code-block language-${language}`}>
+        {/* Simple plaintext rendering */}
+        <code>
+          {code}
+        </code>
+      </pre>
+      {/* Action buttons */}
+      <div className="code-actions">
+        <button onClick={() => navigator.clipboard.writeText(code)}>Copy Code</button>
+        <button>Download File</button>
       </div>
     </div>
-  )
+  );
 }
 
-export default StatusPanel
+export default CodeViewer;

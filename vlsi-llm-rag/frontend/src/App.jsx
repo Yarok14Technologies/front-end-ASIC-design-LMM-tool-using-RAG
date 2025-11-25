@@ -1,36 +1,48 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import Upload from './pages/Upload'
-import Generate from './pages/Generate'
-import Outputs from './pages/Outputs'
-import './App.css'
+// src/App.jsx
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import './App.css'; // Assuming this contains your main layout styles
+
+// Import the page components
+import Home from './pages/Home.jsx';
+import Upload from './pages/Upload.jsx';
+import Generate from './pages/Generate.jsx';
+import Outputs from './pages/Outputs.jsx';
 
 function App() {
   return (
-    <Router>
-      <div className="app">
-        <header className="app-header">
-          <h1>🤖 VLSI Design AI Tool</h1>
-          <nav>
-            <a href="/">Home</a>
-            <a href="/upload">Upload</a>
-            <a href="/generate">Generate</a>
-            <a href="/outputs">Outputs</a>
-          </nav>
-        </header>
-        
-        <main className="app-main">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/generate" element={<Generate />} />
-            <Route path="/outputs" element={<Outputs />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
-  )
+    <div className="app-container">
+      {/* 1. Global Navigation Bar */}
+      <nav className="nav-bar">
+        <ul>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/upload">Upload</Link></li>
+          <li><Link to="/generate">Generate (Verification/IP/VIP)</Link></li>
+          <li><Link to="/outputs">Outputs (Waveforms/Logs)</Link></li>
+        </ul>
+      </nav>
+
+      {/* 2. Routing Logic */}
+      <main className="main-content">
+        <Routes>
+          {/* Matches the root path and renders the Home component */}
+          <Route path="/" element={<Home />} />
+          
+          {/* Matches the /upload path */}
+          <Route path="/upload" element={<Upload />} />
+          
+          {/* Matches the /generate path (Verification/IP/VIP generation) */}
+          <Route path="/generate" element={<Generate />} />
+          
+          {/* Matches the /outputs path (Waveforms, Logs, Reports) */}
+          <Route path="/outputs" element={<Outputs />} />
+          
+          {/* 404 Catch-all Route */}
+          <Route path="*" element={<h2>404 - Page Not Found</h2>} />
+        </Routes>
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
