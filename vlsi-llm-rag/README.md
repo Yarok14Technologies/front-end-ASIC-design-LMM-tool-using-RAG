@@ -100,8 +100,24 @@ vlsi-llm-rag/
 │   │   └── utils/
 │   │       ├── __init__.py
 │   │       ├── file_parser.py
-│   │       └── prompts.py
-|
+│   |       └── prompts.py
+|   |
+│   └── uploads/          # <--- New folder for storing uploaded files
+│       ├── TopModuleName/
+│       │   ├── spec/
+│       │   ├── tb/
+│       │   ├── func/
+│       │   ├── arch/
+│       │   ├── protocol/
+│       │   ├── uvm/
+│       │   ├── fv/
+│       │   └── sva/
+│       ├── SubModule1/
+│       │   └── communication/
+│       ├── SubModule2/
+│       │   └── communication/
+│       └── ...           # dynamically created per user upload
+│  
 ├── knowledge_base/  (Retrieval-Augmented Data)
 │   ├── specs/
 │   ├── protocols/
@@ -194,3 +210,4 @@ The entire stack is designed to be launched using Docker Compose for a consisten
 | OS Support | Windows 10/11, macOS, or Linux | Must support Docker Desktop (ensure virtualization is enabled in BIOS). |
 | Python | Python 3.8+ | Used for the backend/FastAPI application and RAG logic (primarily for development outside of Docker). |
 | Node.js/npm | Node.js 16+ | Used for the frontend/React/Vite development server (primarily for development outside of Docker). |
+
