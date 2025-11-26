@@ -1,16 +1,19 @@
 // src/components/FileUpload.jsx
 import React, { useState } from 'react';
 
-function FileUpload() {
+function FileUpload({ label = 'Select Files', multiple = true, onUpload, accept = '*' }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadStatus, setUploadStatus] = useState('');
 
+  // Handle file selection
   const handleFileChange = (event) => {
-    // Convert FileList object to an array for easy mapping
-    setSelectedFiles(Array.from(event.target.files));
+    const files = Array.from(event.target.files);
+    setSelectedFiles(files);
     setUploadStatus('');
+    if (onUpload) onUpload(files); // Immediately update parent with selected files
   };
 
+  // Optional upload simulation
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
       alert('Please select files to upload.');
@@ -18,51 +21,57 @@ function FileUpload() {
     }
 
     setUploadStatus('Uploading...');
-    
-    // **NOTE:** In a real application, you would use FormData 
-    // and an API call (e.g., Axios or fetch) here.
-    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Files submitted:', selectedFiles.map(f => f.name));
-      setUploadStatus(`Successfully uploaded ${selectedFiles.length} files.`);
-      // Optionally clear files: setSelectedFiles([]);
-    } catch (error) {
-      setUploadStatus(`Upload failed: ${error.message}`);
+      // Simulate async upload
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('Files uploaded:', selectedFiles.map(f => f.name));
+      setUploadStatus(`Uploaded ${selectedFiles.length} file(s) successfully.`);
+      // Optional: clear selection after upload
+      // setSelectedFiles([]);
+      // if (onUpload) onUpload([]);
+    } catch (err) {
+      setUploadStatus(`Upload failed: ${err.message}`);
     }
   };
 
   return (
-    <div className="file-upload-container">
-      <h3>Select Design and Verification Files</h3>
-      <input 
-        type="file" 
-        multiple 
-        onChange={handleFileChange} 
-        accept=".v,.sv,.vhd,.vhdl,.sva" // Common EDA file extensions
-        style={{ marginBottom: '10px' }}
+    <div style={{ marginBottom: '15px' }}>
+      <label style={{ fontWeight: 'bold' }}>{label}</label>
+      <input
+        type="file"
+        multiple={multiple}
+        accept={accept}
+        onChange={handleFileChange}
+        style={{ display: 'block', margin: '5px 0' }}
       />
-      
+
       {selectedFiles.length > 0 && (
-        <div style={{ margin: '15px 0' }}>
-          <h4>Files Selected:</h4>
+        <div>
           <ul>
             {selectedFiles.map((file, index) => (
-              <li key={index}>{file.name} ({Math.round(file.size / 1024)} KB)</li>
+              <li key={index}>
+                {file.name} ({Math.round(file.size / 1024)} KB)
+              </li>
             ))}
           </ul>
-          <button 
-            onClick={handleUpload} 
+          <button
+            onClick={handleUpload}
             disabled={uploadStatus === 'Uploading...'}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: '#007BFF',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: 'pointer'
+            }}
           >
-            {uploadStatus === 'Uploading...' ? 'Processing...' : 'Start Upload'}
+            {uploadStatus === 'Uploading...' ? 'Uploading...' : 'Upload'}
           </button>
         </div>
       )}
-      
-      {uploadStatus && <p style={{ marginTop: '10px' }}>**Status:** {uploadStatus}</p>}
+
+      {uploadStatus && <p style={{ marginTop: '5px' }}>{uploadStatus}</p>}
     </div>
   );
 }
